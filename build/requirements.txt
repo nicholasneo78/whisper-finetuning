@@ -1,0 +1,13 @@
+datasets>=2.6.1
+transformers>=4.19.0
+ffmpeg-python==0.2.0
+evaluate>=0.3.0
+accelerate==0.14.0
+jiwer
+librosa
+numpy
+ipywidgets
+tqdm
+
+clearml==1.7.0
+boto3

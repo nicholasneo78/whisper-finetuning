@@ -1,0 +1,45 @@
+#use the base package for from official pytorch source 
+FROM pytorch/pytorch:1.12.0-cuda11.3-cudnn8-runtime
+
+ENV TZ=Asia/Singapore
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Install libsndfile1 (linux soundfile package)
+RUN apt-get update && apt-get install -y build-essential libsndfile1 git sox wget ffmpeg \
+&& rm -rf /var/lib/apt/lists/*
+
+# Keeps Python from generating .pyc files in the container
+ENV PYTHONDONTWRITEBYTECODE 1
+
+# Turns off buffering for easier container logging
+ENV PYTHONUNBUFFERED 1
+
+# Upgrade the pip
+RUN pip install --upgrade pip
+
+# Install pip requirements
+RUN rm -rf $(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")/ruamel*
+ADD requirements.txt .
+RUN python3 -m pip install torchaudio==0.12.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
+
+# installing jupyter lab inside
+RUN pip install jupyterlab
+
+# installing tensorboardX
+RUN pip install tensorboard --no-cache-dir
+RUN pip install tensorboardX --no-cache-dir
+
+# install huggingface hub here with the required huggineface authentication
+RUN pip install huggingface_hub
+RUN python -c "from huggingface_hub.hf_api import HfFolder; HfFolder.save_token('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')"
+
+# declare port used by jupyterlab
+EXPOSE 8888
+
+# set default command for jupyterlab
+CMD ["jupyter" ,"lab", "--port=8888", "--no-browser", "--ip=0.0.0.0", "--NotebookApp.token=''", "--NotebookApp.password=''", "--allow-root"]
+
+#docker container starts with bash
+WORKDIR /whisper_finetuning
+RUN ["bash"]

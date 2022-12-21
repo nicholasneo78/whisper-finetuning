@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  local:
+    build: ./
+    stdin_open: true
+    tty: true
+    image: whisper_finetuning:v0.0.1
+    ports:
+      - 8888:8888
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - /mnt/d/code/whisper-finetuning/:/whisper_finetuning
+      - /mnt/d/datasets/:/whisper_finetuning/datasets
+      - /mnt/d/models/:/whisper_finetuning/models
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    shm_size: 32gb

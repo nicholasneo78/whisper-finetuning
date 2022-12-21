@@ -83,7 +83,12 @@ class WhisperFinetuning:
         pretrained_whisper_model_dir: str,
         finetuned_language: str,
         finetuned_output_dir: str,
-        num_processes: str
+        num_processes: str,
+        learning_rate: str,
+        weight_decay: str,
+        warmup_steps: str,
+        num_train_epochs: str,
+        save_eval_logging_steps: str
     ) -> None:
         '''
             train_pkl_dir: path to the train data pickle file
@@ -95,6 +100,11 @@ class WhisperFinetuning:
             finetuned_language: the lanuguage that the pretrained model is going to finetune on
             finetuned_output_dir: the path to where the final saved model will be stored
             num_processes: how many gpus to use for the training, 1,2 or 4 for distributed training
+            learning_rate: how fast the gradient of the model will descent
+            weight_decay:  how fast the learning rate will decay every epoch
+            warmup_steps: how many steps with a lower learning rate to get the training warmed up
+            num_train_epochs: number of epochs in the training
+            save_eval_logging_steps: number of steps interval to save, evaluate and log the steps, produces the log, checkpoint models and do an evaluation on the dev/validation set
         '''
         
         self.train_pkl_dir = train_pkl_dir
@@ -106,6 +116,11 @@ class WhisperFinetuning:
         self.finetuned_language = finetuned_language
         self.finetuned_output_dir = finetuned_output_dir
         self.num_processes = num_processes
+        self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
+        self.warmup_steps = warmup_steps
+        self.num_train_epochs = num_train_epochs
+        self.save_eval_logging_steps = save_eval_logging_steps
 
         # initialise the loading of the feature extractor, tokenizer and the processor
         self.feature_extractor = WhisperFeatureExtractor.from_pretrained(self.pretrained_whisper_model_dir)
@@ -237,24 +252,23 @@ class WhisperFinetuning:
 
         training_args = Seq2SeqTrainingArguments(
             output_dir=self.finetuned_output_dir,  # change to a repo name of your choice
+            learning_rate=self.learning_rate,
+            weight_decay=self.weight_decay,
+            warmup_steps=self.warmup_steps,
             group_by_length=True,
             per_device_train_batch_size=4,
             per_device_eval_batch_size=4,
             gradient_accumulation_steps=4,  # increase by 2x for every 2x decrease in batch size
-            group_by_length=True,
             gradient_checkpointing=True,
-            learning_rate=1e-5,
-            weight_decay=5e-5,
-            warmup_steps=100,
             #max_steps=200,
-            num_train_epochs=2,
             fp16=True,
             evaluation_strategy="steps",
             predict_with_generate=True,
             generation_max_length=400, #225
-            save_steps=200,
-            eval_steps=200,
-            logging_steps=200,
+            num_train_epochs=self.num_train_epochs,
+            save_steps=self.save_eval_logging_steps,
+            eval_steps=self.save_eval_logging_steps,
+            logging_steps=self.save_eval_logging_steps,
             load_best_model_at_end=True,
             metric_for_best_model="wer",
             save_total_limit=1,
@@ -286,7 +300,6 @@ class WhisperFinetuning:
         return accelerate.notebook_launcher(self.train_trainer_ddp, args=(), num_processes=self.num_processes)
         
 
-
 if __name__ == '__main__':
     w = WhisperFinetuning(
             train_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/train_small.pkl', 
@@ -297,6 +310,11 @@ if __name__ == '__main__':
             pretrained_whisper_model_dir='/whisper_finetuning/models/whisper/whisper-small',
             finetuned_language='malay',
             finetuned_output_dir='/whisper/models/whisper/whisper-small-malay',
+            learning_rate=1e-5,
+            weight_decay=5e-5,
+            warmup_steps=100,
+            num_train_epochs=2,
+            save_eval_logging_steps=300,
             num_processes=1
         )
 

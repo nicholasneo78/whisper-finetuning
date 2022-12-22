@@ -301,20 +301,39 @@ class WhisperFinetuning:
         
 
 if __name__ == '__main__':
+    # w = WhisperFinetuning(
+    #         train_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/train_small.pkl', 
+    #         dev_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/dev.pkl', 
+    #         test_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/test.pkl', 
+    #         root_path_to_be_removed='/stt_with_kenlm_pipeline', 
+    #         root_path_to_be_replaced='/whisper_finetuning',
+    #         pretrained_whisper_model_dir='/whisper_finetuning/models/whisper/whisper-small',
+    #         finetuned_language='malay',
+    #         finetuned_output_dir='/whisper_finetuning/models/whisper/whisper-small-malay',
+    #         learning_rate=1e-5,
+    #         weight_decay=5e-5,
+    #         warmup_steps=100,
+    #         num_train_epochs=2,
+    #         save_eval_logging_steps=500,
+    #         num_processes=1
+    #     )
+
+    # w()
+
     w = WhisperFinetuning(
-            train_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/train_small.pkl', 
-            dev_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/dev.pkl', 
-            test_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/test.pkl', 
+            train_pkl_dir='/whisper_finetuning/datasets/librispeech/train.pkl', 
+            dev_pkl_dir='/whisper_finetuning/datasets/librispeech/dev.pkl', 
+            test_pkl_dir='/whisper_finetuning/datasets/librispeech/test.pkl', 
             root_path_to_be_removed='/stt_with_kenlm_pipeline', 
             root_path_to_be_replaced='/whisper_finetuning',
             pretrained_whisper_model_dir='/whisper_finetuning/models/whisper/whisper-small',
-            finetuned_language='malay',
-            finetuned_output_dir='/whisper/models/whisper/whisper-small-malay',
-            learning_rate=1e-5,
-            weight_decay=5e-5,
-            warmup_steps=100,
-            num_train_epochs=2,
-            save_eval_logging_steps=300,
+            finetuned_language='english',
+            finetuned_output_dir='/whisper_finetuning/models/whisper/whisper-small-librispeech',
+            learning_rate=1e-4,
+            weight_decay=1e-5,
+            warmup_steps=1000,
+            num_train_epochs=30,
+            save_eval_logging_steps=200,
             num_processes=1
         )
 

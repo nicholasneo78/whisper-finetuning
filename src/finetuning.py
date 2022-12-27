@@ -244,10 +244,10 @@ class WhisperFinetuning:
         model.config.forced_decoder_ids = None
         model.config.suppress_tokens = []
 
-        for name, param in model.named_parameters():
-            param.requires_grad = False
-            if name == 'model.decoder.layer_norm.weight' or name == 'model.decoder.layer_norm.bias' or name.startswith('model.decoder.layers.11.'):
-                param.requires_grad = True
+        # for name, param in model.named_parameters():
+        #     param.requires_grad = False
+        #     if name == 'model.decoder.layer_norm.weight' or name == 'model.decoder.layer_norm.bias' or name.startswith('model.decoder.layers.11.'):
+        #         param.requires_grad = True
             # print(name, param.requires_grad)
 
         training_args = Seq2SeqTrainingArguments(
@@ -332,8 +332,8 @@ if __name__ == '__main__':
             learning_rate=1e-4,
             weight_decay=1e-5,
             warmup_steps=1000,
-            num_train_epochs=30,
-            save_eval_logging_steps=200,
+            num_train_epochs=20,
+            save_eval_logging_steps=500,
             num_processes=1
         )
 

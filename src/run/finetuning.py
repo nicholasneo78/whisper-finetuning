@@ -1,7 +1,4 @@
-from tqdm import tqdm
-import ipywidgets
 import torch
-import torchaudio
 import librosa
 import pickle
 import pandas as pd
@@ -13,6 +10,7 @@ from datasets import Dataset, DatasetDict
 from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration, Seq2SeqTrainingArguments, Seq2SeqTrainer
 from transformers.integrations import TensorBoardCallback
 #import evaluate
+from modules import preprocess_text
 from jiwer import compute_measures
 
 class WER(datasets.Metric):
@@ -83,6 +81,8 @@ class WhisperFinetuning:
         pretrained_whisper_model_dir: str,
         finetuned_language: str,
         finetuned_output_dir: str,
+        data_label: str,
+        data_additional_preprocessing: str,
         num_processes: str,
         learning_rate: str,
         weight_decay: str,
@@ -99,6 +99,8 @@ class WhisperFinetuning:
             pretrained_whisper_model_dir: the pretrained whisper model's directory that will be finetuned on
             finetuned_language: the lanuguage that the pretrained model is going to finetune on
             finetuned_output_dir: the path to where the final saved model will be stored
+            data_label: the name of the dataset used in the training (can be any string)
+            data_additional_preprocessing: any other specific additional data processing step needed (default is general)
             num_processes: how many gpus to use for the training, 1,2 or 4 for distributed training
             learning_rate: how fast the gradient of the model will descent
             weight_decay:  how fast the learning rate will decay every epoch
@@ -115,6 +117,8 @@ class WhisperFinetuning:
         self.pretrained_whisper_model_dir = pretrained_whisper_model_dir
         self.finetuned_language = finetuned_language
         self.finetuned_output_dir = finetuned_output_dir
+        self.data_label = data_label
+        self.data_additional_preprocessing = data_additional_preprocessing
         self.num_processes = num_processes
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
@@ -199,7 +203,13 @@ class WhisperFinetuning:
             to evaluate the wer of the model on the dataset
         '''
         
-        pred_ids = pred.predictions
+        pred_ids = preprocess_text(
+            text=pred.predictions,
+            label=self.data_label,
+            language=self.finetuned_language,
+            additional_preprocessing=self.data_additional_preprocessing
+        )
+
         label_ids = pred.label_ids
 
         # replace -100 with the pad_token_id
@@ -248,27 +258,27 @@ class WhisperFinetuning:
         model.config.forced_decoder_ids = None
         model.config.suppress_tokens = []
 
-        # for name, param in model.named_parameters():
-        #     param.requires_grad = False
-        #     if name == 'model.decoder.layer_norm.weight' or name == 'model.decoder.layer_norm.bias' or name.startswith('model.decoder.layers.11.'):
-        #         param.requires_grad = True
+        for name, param in model.named_parameters():
+            param.requires_grad = False
+            if name == 'model.decoder.layer_norm.weight' or name == 'model.decoder.layer_norm.bias' or name.startswith('model.decoder.layers.11.') or name.startswith('model.decoder.layers.10.'):
+                param.requires_grad = True
             # print(name, param.requires_grad)
 
         training_args = Seq2SeqTrainingArguments(
-            output_dir=self.finetuned_output_dir,  # change to a repo name of your choice
+            output_dir=self.finetuned_output_dir, # change to a repo name of your choice
             learning_rate=self.learning_rate,
             weight_decay=self.weight_decay,
             warmup_steps=self.warmup_steps,
             group_by_length=True,
             per_device_train_batch_size=4,
             per_device_eval_batch_size=4,
-            gradient_accumulation_steps=4,  # increase by 2x for every 2x decrease in batch size
+            gradient_accumulation_steps=4, # increase by 2x for every 2x decrease in batch size
             gradient_checkpointing=True,
             #max_steps=200,
             fp16=True,
             evaluation_strategy="steps",
             predict_with_generate=True,
-            generation_max_length=400, #225
+            generation_max_length=225,
             num_train_epochs=self.num_train_epochs,
             save_steps=self.save_eval_logging_steps,
             eval_steps=self.save_eval_logging_steps,
@@ -326,18 +336,20 @@ if __name__ == '__main__':
 
     w = WhisperFinetuning(
             train_pkl_dir='/whisper_finetuning/datasets/librispeech/train_small.pkl',
-            dev_pkl_dir='/whisper_finetuning/datasets/librispeech/dev.pkl', 
+            dev_pkl_dir='/whisper_finetuning/datasets/librispeech/dev_small.pkl', 
             test_pkl_dir='/whisper_finetuning/datasets/librispeech/test.pkl', 
             root_path_to_be_removed='/whisper_finetuning', 
             root_path_to_be_replaced='/whisper_finetuning',
             pretrained_whisper_model_dir='/whisper_finetuning/models/whisper/whisper-small',
-            finetuned_language='english',
+            finetuned_language='en', # 'english'
             finetuned_output_dir='/whisper_finetuning/models/whisper/whisper-small-librispeech',
+            data_label='librispeech',
+            data_additional_preprocessing='general',
             learning_rate=1e-4,
             weight_decay=1e-5,
-            warmup_steps=1500,
-            num_train_epochs=20,
-            save_eval_logging_steps=500,
+            warmup_steps=1000,
+            num_train_epochs=5,
+            save_eval_logging_steps=200,
             num_processes=1
         )
 

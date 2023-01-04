@@ -1,18 +1,10 @@
 # imports
 import os
-from os.path import join
-import numpy as np
 import pandas as pd
 import json
-import librosa
-from pathlib import Path
-import yaml
 from tqdm import tqdm
-import pickle
-import re
 from typing import Tuple
-from modules import get_text_from_number
-from num2words import num2words
+from modules import preprocess_text
 
 class GeneratePickleFromManifest:
     '''
@@ -32,51 +24,51 @@ class GeneratePickleFromManifest:
         self.label = label
         self.language = language
 
-    def create_new_dir(self, directory: str) -> None:
-        '''
-            create new directory and ignore already created ones
+    # def create_new_dir(self, directory: str) -> None:
+    #     '''
+    #         create new directory and ignore already created ones
 
-            directory: the directory path that is being created
-        '''
+    #         directory: the directory path that is being created
+    #     '''
 
-        try:
-            os.mkdir(directory)
-        except OSError as error:
-            pass # directory already exists!
+    #     try:
+    #         os.mkdir(directory)
+    #     except OSError as error:
+    #         pass # directory already exists!
 
-    def preprocess_text(self, text: str) -> str:
-        '''
-            all the text preprocessing being done for the annotations
+    # def preprocess_text(self, text: str) -> str:
+    #     '''
+    #         all the text preprocessing being done for the annotations
 
-            text: text annotations required to be preprocessed            
-        '''
+    #         text: text annotations required to be preprocessed            
+    #     '''
 
-        # additional preprocessing to replace the filler words with one symbol
-        if self.additional_preprocessing == 'general':
-            clean_text = text.replace('#', ' ').replace('<unk>', '#')
+    #     # additional preprocessing to replace the filler words with one symbol
+    #     if self.additional_preprocessing == 'general':
+    #         clean_text = text.replace('#', ' ').replace('<unk>', '#')
         
-        # add more here for other filler word or additional preprocessing needed for other data
-        # elif ...
+    #     # add more here for other filler word or additional preprocessing needed for other data
+    #     # elif ...
 
-        else:
-            clean_text = text.replace('#', ' ')
+    #     else:
+    #         clean_text = text.replace('#', ' ')
         
-        # keep only certain characters
-        clean_text = re.sub(r'[^A-Za-z0-9#\' ]+', ' ', clean_text)
+    #     # keep only certain characters
+    #     clean_text = re.sub(r'[^A-Za-z0-9#\' ]+', ' ', clean_text)
         
-        # replace hyphen with space because hyphen cannot be heard
-        clean_text = clean_text.replace('-', ' ')
+    #     # replace hyphen with space because hyphen cannot be heard
+    #     clean_text = clean_text.replace('-', ' ')
 
-        # convert all the digits to its text equivalent
-        clean_text = get_text_from_number(text=clean_text, 
-                                          label=self.label, 
-                                          language=self.language)
+    #     # convert all the digits to its text equivalent
+    #     clean_text = get_text_from_number(text=clean_text, 
+    #                                       label=self.label, 
+    #                                       language=self.language)
         
-        # convert multiple spaces into only one space
-        clean_text = ' '.join(clean_text.split())
+    #     # convert multiple spaces into only one space
+    #     clean_text = ' '.join(clean_text.split())
 
-        # returns the preprocessed text
-        return clean_text.upper()
+    #     # returns the preprocessed text
+    #     return clean_text.upper()
 
     def build_pickle_from_manifest(self) -> Tuple[pd.DataFrame, str]:
         '''
@@ -100,7 +92,11 @@ class GeneratePickleFromManifest:
             # audio_array, _ = librosa.load(f"{self.manifest_path.rsplit('/', 1)[0]}/{entries['audio_filepath']}", sr=16000)
 
             # text preprocessing
-            clean_text = self.preprocess_text(entries['text'])
+            clean_text = preprocess_text(
+                text=entries['text'],
+                label=self.label,
+                language=self.language
+            )
 
             # creating the final data dictionary that is to be saved to a pkl file
             data = {'file': f"{self.manifest_path.rsplit('/', 1)[0]}/{entries['audio_filepath']}",
@@ -117,10 +113,6 @@ class GeneratePickleFromManifest:
 
         # form the dataframe
         df_final = pd.DataFrame(data_list)
-
-        # create pickle folder if it does not exist
-        # self.create_new_dir('./root/')
-        # self.create_new_dir('./root/pkl/')
 
         # export the dataframe to pickle
         df_final.to_pickle(self.pkl_filename)
@@ -140,8 +132,8 @@ if __name__ == "__main__":
                                                        label='librispeech',
                                                        language='en')
 
-    librispeech_dev_pkl = GeneratePickleFromManifest(manifest_path='/whisper_finetuning/datasets/librispeech/librispeech-dev-clean/dev_manifest.json', 
-                                                     pkl_filename='/whisper_finetuning/datasets/librispeech/dev.pkl',
+    librispeech_dev_pkl = GeneratePickleFromManifest(manifest_path='/whisper_finetuning/datasets/librispeech/librispeech-dev-clean/dev_manifest_small.json', 
+                                                     pkl_filename='/whisper_finetuning/datasets/librispeech/dev_small.pkl',
                                                      label='librispeech',
                                                      language='en')
 

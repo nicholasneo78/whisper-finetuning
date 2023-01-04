@@ -1,5 +1,40 @@
 from nltk import flatten
 from num2words import num2words
+import re
+
+def preprocess_text(text: str, label: str, language: str='en', additional_preprocessing: str='general') -> str:
+        '''
+            all the text preprocessing being done for the annotations
+
+            text: text annotations required to be preprocessed            
+        '''
+
+        # additional preprocessing to replace the filler words with one symbol
+        if additional_preprocessing == 'general':
+            clean_text = text.replace('#', ' ').replace('<unk>', '#')
+        
+        # add more here for other filler word or additional preprocessing needed for other data
+        # elif ...
+
+        else:
+            clean_text = text.replace('#', ' ')
+        
+        # keep only certain characters
+        clean_text = re.sub(r'[^A-Za-z0-9#\' ]+', ' ', clean_text)
+        
+        # replace hyphen with space because hyphen cannot be heard
+        clean_text = clean_text.replace('-', ' ')
+
+        # convert all the digits to its text equivalent
+        clean_text = get_text_from_number(text=clean_text, 
+                                          label=label, 
+                                          language=language)
+        
+        # convert multiple spaces into only one space
+        clean_text = ' '.join(clean_text.split())
+
+        # returns the preprocessed text
+        return clean_text.upper()
 
 def get_text_from_number(text: str, label: str, language: str) -> str:
         '''
@@ -75,3 +110,16 @@ def get_text_from_number(text: str, label: str, language: str) -> str:
 
         # returns the preprocessed text, where all the numbers in annotations are converted to text
         return ' '.join(text_list_flat)
+
+if __name__ == "__main__":
+
+    # test the preprocess_text module
+    text = preprocess_text(
+        text=' Hello From the 9 OtHer SIDE, i must-be good 10.', 
+        label='testing', 
+        language='en', 
+        additional_preprocessing='general'
+    )
+
+    print(text)
+    print(text == 'HELLO FROM THE NINE OTHER SIDE I MUST BE GOOD TEN')

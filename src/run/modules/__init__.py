@@ -1,1 +1,1 @@
-from .text_preprocessing import get_text_from_number
+from .text_preprocessing import get_text_from_number, preprocess_text

@@ -99,13 +99,6 @@ class GenerateManifest:
 
 if __name__ == '__main__':
 
-    #### LIBRISPEECH DATA #####
-    # get_manifest_train = GenerateManifest(root_folder="/manifest_preprocessing/datasets/librispeech/train/", 
-    #                                       manifest_filename="/manifest_preprocessing/datasets/librispeech/train/train_manifest.json", 
-    #                                       got_annotation=True,
-    #                                       audio_ext='.flac')
-    # _ = get_manifest_train()
-
     # get_manifest_train = GenerateManifest(root_folder="/manifest_preprocessing/datasets/librispeech/librispeech-100/", 
     #                                       manifest_filename="/manifest_preprocessing/datasets/librispeech/librispeech-100/train_manifest.json", 
     #                                       got_annotation=True,
@@ -123,31 +116,3 @@ if __name__ == '__main__':
                                          got_annotation=True,
                                          audio_ext='.wav')
     _ = get_manifest_test()
-
-    ##### JTubeSpeech Bahasa Melayu data
-    # get_manifest_jts_ms = GenerateManifest(root_folder="/manifest_preprocessing/datasets/jtubespeech/ms_2/annotated_data/", 
-    #                                        manifest_filename="/manifest_preprocessing/datasets/jtubespeech/ms_2/annotated_data/manifest.json", 
-    #                                        got_annotation=True,
-    #                                        audio_ext='.wav')
-    # _ = get_manifest_jts_ms()
-
-
-
-    ##### MMS DATA #####
-
-    # batch = 'mms_batch_1'
-    # root_dir = f'/manifest_preprocessing/datasets/mms/{batch}'
-    # batch_date_list = [d for d in os.listdir(root_dir)]
-    # channel_list = ['CH 10', 'CH 14', 'CH 16', 'CH 73']
-
-    # for mms_date in batch_date_list:
-    #     for channel in channel_list:
-
-    #         get_manifest = GenerateManifest(root_folder=f"/manifest_preprocessing/datasets/mms/{batch}/{mms_date}/{channel}/", 
-    #                                         manifest_filename=f"/manifest_preprocessing/datasets/mms/{batch}/{mms_date}/{channel}/manifest.json", 
-    #                                         got_annotation=False,
-    #                                         audio_ext='.wav')
-
-    #         _ = get_manifest()
-
-    #         print(f'{mms_date} - {channel}: json manifest file created!')

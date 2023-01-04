@@ -209,6 +209,10 @@ class WhisperFinetuning:
         pred_str = self.tokenizer.batch_decode(pred_ids, skip_special_tokens=True)
         label_str = self.tokenizer.batch_decode(label_ids, skip_special_tokens=True)
 
+        # debug
+        print(f'Pred str: {pred_str}')
+        print(f'Label str: {label_str}')
+
         get_wer = WER(predictions=pred_str, references=label_str)
         #wer = 100 * get_wer.compute()
 
@@ -305,7 +309,7 @@ if __name__ == '__main__':
     #         train_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/train_small.pkl', 
     #         dev_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/dev.pkl', 
     #         test_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/test.pkl', 
-    #         root_path_to_be_removed='/stt_with_kenlm_pipeline', 
+    #         root_path_to_be_removed='/whisper_finetuning', 
     #         root_path_to_be_replaced='/whisper_finetuning',
     #         pretrained_whisper_model_dir='/whisper_finetuning/models/whisper/whisper-small',
     #         finetuned_language='malay',
@@ -321,17 +325,17 @@ if __name__ == '__main__':
     # w()
 
     w = WhisperFinetuning(
-            train_pkl_dir='/whisper_finetuning/datasets/librispeech/train.pkl', 
+            train_pkl_dir='/whisper_finetuning/datasets/librispeech/train_small.pkl',
             dev_pkl_dir='/whisper_finetuning/datasets/librispeech/dev.pkl', 
             test_pkl_dir='/whisper_finetuning/datasets/librispeech/test.pkl', 
-            root_path_to_be_removed='/stt_with_kenlm_pipeline', 
+            root_path_to_be_removed='/whisper_finetuning', 
             root_path_to_be_replaced='/whisper_finetuning',
             pretrained_whisper_model_dir='/whisper_finetuning/models/whisper/whisper-small',
             finetuned_language='english',
             finetuned_output_dir='/whisper_finetuning/models/whisper/whisper-small-librispeech',
             learning_rate=1e-4,
             weight_decay=1e-5,
-            warmup_steps=1000,
+            warmup_steps=1500,
             num_train_epochs=20,
             save_eval_logging_steps=500,
             num_processes=1

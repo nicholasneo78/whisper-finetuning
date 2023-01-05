@@ -80,6 +80,7 @@ class WhisperFinetuning:
         root_path_to_be_removed: str, 
         root_path_to_be_replaced: str,
         pretrained_whisper_model_dir: str,
+        text_preprocessing_language: str,
         finetuned_language: str,
         finetuned_output_dir: str,
         data_label: str,
@@ -98,6 +99,7 @@ class WhisperFinetuning:
             root_path_to_be_removed: the original old root path to be replaced in the pickle file
             root_path_to_be_replaced: the new root path to replace the old one in the pickle file
             pretrained_whisper_model_dir: the pretrained whisper model's directory that will be finetuned on
+            text_preprocessing_language: the language code for preprocessing the text
             finetuned_language: the lanuguage that the pretrained model is going to finetune on
             finetuned_output_dir: the path to where the final saved model will be stored
             data_label: the name of the dataset used in the training (can be any string)
@@ -116,6 +118,7 @@ class WhisperFinetuning:
         self.root_path_to_be_removed = root_path_to_be_removed
         self.root_path_to_be_replaced = root_path_to_be_replaced
         self.pretrained_whisper_model_dir = pretrained_whisper_model_dir
+        self.text_preprocessing_language = text_preprocessing_language
         self.finetuned_language = finetuned_language
         self.finetuned_output_dir = finetuned_output_dir
         self.data_label = data_label
@@ -220,7 +223,7 @@ class WhisperFinetuning:
             preprocess_text(
                 text=sentence,
                 label=self.data_label,
-                language=self.finetuned_language,
+                language=self.text_preprocessing_language,
                 additional_preprocessing=self.data_additional_preprocessing
             ) 
             for sentence in tqdm(pred_str)
@@ -264,7 +267,7 @@ class WhisperFinetuning:
 
         # override generation arguments - no tokens are forced as decoder outputs
         model.config.use_cache = False
-        model.config.forced_decoder_ids = None
+        model.config.forced_decoder_ids = processor.get_decoder_prompt_ids(language=self.finetuned_language, task='transcribe')
         model.config.suppress_tokens = []
 
         for name, param in model.named_parameters():
@@ -324,42 +327,46 @@ class WhisperFinetuning:
         
 
 if __name__ == '__main__':
-    # w = WhisperFinetuning(
-    #         train_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/train_small.pkl', 
-    #         dev_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/dev.pkl', 
-    #         test_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/test.pkl', 
-    #         root_path_to_be_removed='/whisper_finetuning', 
-    #         root_path_to_be_replaced='/whisper_finetuning',
-    #         pretrained_whisper_model_dir='/whisper_finetuning/models/whisper/whisper-small',
-    #         finetuned_language='malay',
-    #         finetuned_output_dir='/whisper_finetuning/models/whisper/whisper-small-malay',
-    #         learning_rate=1e-5,
-    #         weight_decay=5e-5,
-    #         warmup_steps=100,
-    #         num_train_epochs=2,
-    #         save_eval_logging_steps=500,
-    #         num_processes=1
-    #     )
-
-    # w()
-
     w = WhisperFinetuning(
-            train_pkl_dir='/whisper_finetuning/datasets/librispeech/train_small.pkl',
-            dev_pkl_dir='/whisper_finetuning/datasets/librispeech/dev_small.pkl', 
-            test_pkl_dir='/whisper_finetuning/datasets/librispeech/test.pkl', 
+            train_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/train.pkl',
+            dev_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/dev.pkl', 
+            test_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/test.pkl', 
             root_path_to_be_removed='/whisper_finetuning', 
             root_path_to_be_replaced='/whisper_finetuning',
             pretrained_whisper_model_dir='/whisper_finetuning/models/whisper/whisper-small',
-            finetuned_language='en', # 'english'
-            finetuned_output_dir='/whisper_finetuning/models/whisper/whisper-small-librispeech',
-            data_label='librispeech',
+            text_preprocessing_language='ms',
+            finetuned_language='ms', # 'Malay', # has to be this spelling?
+            finetuned_output_dir='/whisper_finetuning/models/whisper/whisper-small-jtubespeech-ms',
+            data_label='jtubespeech_ms',
             data_additional_preprocessing='general',
             learning_rate=1e-4,
             weight_decay=1e-5,
             warmup_steps=1000,
-            num_train_epochs=5,
-            save_eval_logging_steps=200,
+            num_train_epochs=10,
+            save_eval_logging_steps=500,
             num_processes=1
         )
 
     w()
+
+    # w = WhisperFinetuning(
+    #         train_pkl_dir='/whisper_finetuning/datasets/librispeech/train_small.pkl',
+    #         dev_pkl_dir='/whisper_finetuning/datasets/librispeech/dev_small.pkl', 
+    #         test_pkl_dir='/whisper_finetuning/datasets/librispeech/test.pkl', 
+    #         root_path_to_be_removed='/whisper_finetuning', 
+    #         root_path_to_be_replaced='/whisper_finetuning',
+    #         pretrained_whisper_model_dir='/whisper_finetuning/models/whisper/whisper-small',
+    #         text_preprocessing_language='en',
+    #         finetuned_language='English',
+    #         finetuned_output_dir='/whisper_finetuning/models/whisper/whisper-small-librispeech',
+    #         data_label='librispeech',
+    #         data_additional_preprocessing='general',
+    #         learning_rate=1e-4,
+    #         weight_decay=1e-5,
+    #         warmup_steps=1000,
+    #         num_train_epochs=5,
+    #         save_eval_logging_steps=200,
+    #         num_processes=1
+    #     )
+
+    # w()

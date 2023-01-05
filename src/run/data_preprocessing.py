@@ -127,21 +127,47 @@ class GeneratePickleFromManifest:
 
 if __name__ == "__main__":
 
-    librispeech_train_pkl = GeneratePickleFromManifest(manifest_path='/whisper_finetuning/datasets/librispeech/librispeech-100/train_manifest_small.json', 
-                                                       pkl_filename='/whisper_finetuning/datasets/librispeech/train_small.pkl',
-                                                       label='librispeech',
-                                                       language='en')
+    # train_pkl = GeneratePickleFromManifest(manifest_path='/whisper_finetuning/datasets/librispeech/librispeech-100/train_manifest_small.json', 
+    #                                                    pkl_filename='/whisper_finetuning/datasets/librispeech/train_small.pkl',
+    #                                                    label='librispeech',
+    #                                                    language='en')
 
-    librispeech_dev_pkl = GeneratePickleFromManifest(manifest_path='/whisper_finetuning/datasets/librispeech/librispeech-dev-clean/dev_manifest_small.json', 
-                                                     pkl_filename='/whisper_finetuning/datasets/librispeech/dev_small.pkl',
-                                                     label='librispeech',
-                                                     language='en')
+    # dev_pkl = GeneratePickleFromManifest(manifest_path='/whisper_finetuning/datasets/librispeech/librispeech-dev-clean/dev_manifest_small.json', 
+    #                                                  pkl_filename='/whisper_finetuning/datasets/librispeech/dev_small.pkl',
+    #                                                  label='librispeech',
+    #                                                  language='en')
 
-    librispeech_test_pkl = GeneratePickleFromManifest(manifest_path='/whisper_finetuning/datasets/librispeech/librispeech-test-clean/test_manifest.json', 
-                                                       pkl_filename='/whisper_finetuning/datasets/librispeech/test.pkl',
-                                                       label='librispeech',
-                                                       language='en')
+    # test_pkl = GeneratePickleFromManifest(manifest_path='/whisper_finetuning/datasets/librispeech/librispeech-test-clean/test_manifest.json', 
+    #                                                    pkl_filename='/whisper_finetuning/datasets/librispeech/test.pkl',
+    #                                                    label='librispeech',
+    #                                                    language='en')
 
-    _, _ = librispeech_train_pkl()
-    _, _ = librispeech_dev_pkl()
-    _, _ = librispeech_test_pkl()
+    # _, _ = train_pkl()
+    # _, _ = dev_pkl()
+    # _, _ = test_pkl()
+
+
+    train_pkl = GeneratePickleFromManifest(
+        manifest_path='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/train.json', 
+        pkl_filename='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/train.pkl',
+        label='jtubespeech_ms',
+        language='ms'
+    )
+
+    dev_pkl = GeneratePickleFromManifest(
+        manifest_path='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/dev.json', 
+        pkl_filename='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/dev.pkl',
+        label='jtubespeech_ms',
+        language='ms'
+    )
+
+    test_pkl = GeneratePickleFromManifest(
+        manifest_path='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/test.json', 
+        pkl_filename='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/test.pkl',
+        label='jtubespeech_ms',
+        language='ms'
+    )
+
+    _, _ = train_pkl()
+    _, _ = dev_pkl()
+    _, _ = test_pkl()

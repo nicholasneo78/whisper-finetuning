@@ -283,7 +283,6 @@ class WhisperFinetuning:
             per_device_eval_batch_size=4,
             gradient_accumulation_steps=4, # increase by 2x for every 2x decrease in batch size
             gradient_checkpointing=True,
-            #max_steps=200,
             fp16=True,
             evaluation_strategy="steps",
             predict_with_generate=True,

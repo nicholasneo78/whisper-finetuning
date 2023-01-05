@@ -12,6 +12,7 @@ from transformers.integrations import TensorBoardCallback
 #import evaluate
 from modules import preprocess_text
 from jiwer import compute_measures
+from tqdm import tqdm
 
 class WER(datasets.Metric):
     '''
@@ -203,13 +204,7 @@ class WhisperFinetuning:
             to evaluate the wer of the model on the dataset
         '''
         
-        pred_ids = preprocess_text(
-            text=pred.predictions,
-            label=self.data_label,
-            language=self.finetuned_language,
-            additional_preprocessing=self.data_additional_preprocessing
-        )
-
+        pred_ids = pred.predictions
         label_ids = pred.label_ids
 
         # replace -100 with the pad_token_id
@@ -219,11 +214,25 @@ class WhisperFinetuning:
         pred_str = self.tokenizer.batch_decode(pred_ids, skip_special_tokens=True)
         label_str = self.tokenizer.batch_decode(label_ids, skip_special_tokens=True)
 
+        # do the text preprocessing here to normalise the predicted text form whisper
+        print('Normalizing the predicted text now...')
+        pred_str_processed = [
+            preprocess_text(
+                text=sentence,
+                label=self.data_label,
+                language=self.finetuned_language,
+                additional_preprocessing=self.data_additional_preprocessing
+            ) 
+            for sentence in tqdm(pred_str)
+        ]
+        print('Normalizing of text done!')
+
         # debug
-        print(f'Pred str: {pred_str}')
+        print(f'Pred str: {pred_str_processed}')
         print(f'Label str: {label_str}')
 
-        get_wer = WER(predictions=pred_str, references=label_str)
+        get_wer = WER(predictions=pred_str_processed, references=label_str)
+        # get_wer = WER(predictions=pred_str, references=label_str)
         #wer = 100 * get_wer.compute()
 
         wer = get_wer.compute()
@@ -294,7 +303,7 @@ class WhisperFinetuning:
             args=training_args,
             model=model,
             train_dataset=dataset["train"],
-            eval_dataset=dataset["test"],
+            eval_dataset=dataset["dev"],
             data_collator=data_collator,
             compute_metrics=self.compute_metrics,
             tokenizer=processor.feature_extractor,
@@ -304,6 +313,7 @@ class WhisperFinetuning:
         processor.save_pretrained(training_args.output_dir)
     
         trainer.train()
+        
 
     def __call__(self) -> None:
         '''

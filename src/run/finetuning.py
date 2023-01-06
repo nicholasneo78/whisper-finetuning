@@ -81,7 +81,7 @@ class WhisperFinetuning:
         root_path_to_be_replaced: str,
         pretrained_whisper_model_dir: str,
         text_preprocessing_language: str,
-        finetuned_language: str,
+        finetuned_language_dict: Dict,
         finetuned_output_dir: str,
         data_label: str,
         data_additional_preprocessing: str,
@@ -100,7 +100,7 @@ class WhisperFinetuning:
             root_path_to_be_replaced: the new root path to replace the old one in the pickle file
             pretrained_whisper_model_dir: the pretrained whisper model's directory that will be finetuned on
             text_preprocessing_language: the language code for preprocessing the text
-            finetuned_language: the lanuguage that the pretrained model is going to finetune on
+            finetuned_language_dict: a dictionary to represent the lanuguage that the pretrained model is going to finetune on
             finetuned_output_dir: the path to where the final saved model will be stored
             data_label: the name of the dataset used in the training (can be any string)
             data_additional_preprocessing: any other specific additional data processing step needed (default is general)
@@ -119,7 +119,7 @@ class WhisperFinetuning:
         self.root_path_to_be_replaced = root_path_to_be_replaced
         self.pretrained_whisper_model_dir = pretrained_whisper_model_dir
         self.text_preprocessing_language = text_preprocessing_language
-        self.finetuned_language = finetuned_language
+        self.finetuned_language_dict = finetuned_language_dict
         self.finetuned_output_dir = finetuned_output_dir
         self.data_label = data_label
         self.data_additional_preprocessing = data_additional_preprocessing
@@ -132,8 +132,8 @@ class WhisperFinetuning:
 
         # initialise the loading of the feature extractor, tokenizer and the processor
         self.feature_extractor = WhisperFeatureExtractor.from_pretrained(self.pretrained_whisper_model_dir)
-        self.tokenizer = WhisperTokenizer.from_pretrained(self.pretrained_whisper_model_dir, language=self.finetuned_language, task="transcribe")
-        #self.processor = WhisperProcessor.from_pretrained(self.pretrained_whisper_model_dir, language=self.finetuned_language, task="transcribe")
+        self.tokenizer = WhisperTokenizer.from_pretrained(self.pretrained_whisper_model_dir, language=self.finetuned_language_dict['tokenizer'], task="transcribe")
+        #self.processor = WhisperProcessor.from_pretrained(self.pretrained_whisper_model_dir, language=self.finetuned_language_dict['tokenizer'], task="transcribe")
 
         # initalise the metrics
         # self.metric = evaluate.load("wer")
@@ -223,7 +223,7 @@ class WhisperFinetuning:
             preprocess_text(
                 text=sentence,
                 label=self.data_label,
-                language=self.text_preprocessing_language,
+                language=self.finetuned_language_dict['text_preprocessing_language'],
                 additional_preprocessing=self.data_additional_preprocessing
             ) 
             for sentence in tqdm(pred_str)
@@ -231,8 +231,8 @@ class WhisperFinetuning:
         print('Normalizing of text done!')
 
         # debug
-        print(f'Pred str: {pred_str_processed}')
-        print(f'Label str: {label_str}')
+        print(f'Pred str: {pred_str_processed[:100]}')
+        print(f'\n\nLabel str: {label_str[:100]}')
 
         get_wer = WER(predictions=pred_str_processed, references=label_str)
         # get_wer = WER(predictions=pred_str, references=label_str)
@@ -257,7 +257,7 @@ class WhisperFinetuning:
         dataset = dataset.map(self.prepare_dataset, remove_columns=dataset.column_names["train"], num_proc=1)
 
         # initialise the processor here
-        processor = WhisperProcessor.from_pretrained(self.pretrained_whisper_model_dir, language=self.finetuned_language, task="transcribe")
+        processor = WhisperProcessor.from_pretrained(self.pretrained_whisper_model_dir, language=self.finetuned_language_dict['tokenizer'], task="transcribe")
 
         # initialise collator
         data_collator = DataCollatorSpeechSeq2SeqWithPadding(processor=processor)
@@ -267,7 +267,7 @@ class WhisperFinetuning:
 
         # override generation arguments - no tokens are forced as decoder outputs
         model.config.use_cache = False
-        model.config.forced_decoder_ids = processor.get_decoder_prompt_ids(language=self.finetuned_language, task='transcribe')
+        model.config.forced_decoder_ids = processor.get_decoder_prompt_ids(language=self.finetuned_language_dict['prompt_id'], task='transcribe')
         model.config.suppress_tokens = []
 
         for name, param in model.named_parameters():
@@ -327,6 +327,7 @@ class WhisperFinetuning:
         
 
 if __name__ == '__main__':
+
     w = WhisperFinetuning(
             train_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/train.pkl',
             dev_pkl_dir='/whisper_finetuning/datasets/jtubespeech/ms_2/annotated_data_whisper_ms/dev.pkl', 
@@ -334,13 +335,17 @@ if __name__ == '__main__':
             root_path_to_be_removed='/whisper_finetuning', 
             root_path_to_be_replaced='/whisper_finetuning',
             pretrained_whisper_model_dir='/whisper_finetuning/models/whisper/whisper-small',
-            text_preprocessing_language='ms',
-            finetuned_language='ms', # 'Malay', # has to be this spelling?
+            text_preprocessing_language=None,
+            finetuned_language_dict={
+                'text_preprocessing_language': 'ms',
+                'tokenizer':'malay',
+                'prompt_id': 'ms'
+            },
             finetuned_output_dir='/whisper_finetuning/models/whisper/whisper-small-jtubespeech-ms',
             data_label='jtubespeech_ms',
             data_additional_preprocessing='general',
-            learning_rate=1e-4,
-            weight_decay=1e-5,
+            learning_rate=2e-5,
+            weight_decay=1e-8, # no decay
             warmup_steps=1000,
             num_train_epochs=10,
             save_eval_logging_steps=500,
@@ -357,7 +362,7 @@ if __name__ == '__main__':
     #         root_path_to_be_replaced='/whisper_finetuning',
     #         pretrained_whisper_model_dir='/whisper_finetuning/models/whisper/whisper-small',
     #         text_preprocessing_language='en',
-    #         finetuned_language='English',
+    #         finetuned_language_dict='english',
     #         finetuned_output_dir='/whisper_finetuning/models/whisper/whisper-small-librispeech',
     #         data_label='librispeech',
     #         data_additional_preprocessing='general',

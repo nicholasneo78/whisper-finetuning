@@ -36,6 +36,20 @@ def preprocess_text(text: str, label: str, language: str='en', additional_prepro
         # returns the preprocessed text
         return clean_text.upper()
 
+
+def collapse_duplicate_words(text: str) -> str:
+    '''
+        to colllapse duplicate words/phrases if there are
+
+        text : obtains an entry of the annotations to do the text preprocessing
+    '''
+
+    unique_words = dict.fromkeys(text.split())
+    preprocessed_text = ' '.join(unique_words)
+
+    return preprocessed_text
+
+
 def get_text_from_number(text: str, label: str, language: str) -> str:
         '''
             to input the text and detect if any digits exists, if there is, will convert the numbers into its word representation
@@ -113,13 +127,15 @@ def get_text_from_number(text: str, label: str, language: str) -> str:
 
 if __name__ == "__main__":
 
-    # test the preprocess_text module
-    text = preprocess_text(
-        text=' Hello From the 9 OtHer SIDE, i must-be good 10.', 
-        label='testing', 
-        language='en', 
-        additional_preprocessing='general'
-    )
+    # # test the preprocess_text module
+    # text = preprocess_text(
+    #     text=' Hello From the 9 OtHer SIDE, i must-be good 10.', 
+    #     label='testing', 
+    #     language='en', 
+    #     additional_preprocessing='general'
+    # )
 
-    print(text)
-    print(text == 'HELLO FROM THE NINE OTHER SIDE I MUST BE GOOD TEN')
+    # print(text)
+    # print(text == 'HELLO FROM THE NINE OTHER SIDE I MUST BE GOOD TEN')
+
+    print(collapse_duplicate_words(text='what type of people were were most likely to be able type to be able to be able to be able to be 1.35'))

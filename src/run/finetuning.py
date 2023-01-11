@@ -231,8 +231,10 @@ class WhisperFinetuning:
         print('Normalizing of text done!')
 
         # debug
-        print(f'Pred str: {pred_str_processed[:100]}')
-        print(f'\n\nLabel str: {label_str[:100]}')
+        # print(f'Pred str: {pred_str_processed[:200]}')
+        # print(f'\n\nLabel str: {label_str[:200]}')
+
+        print(zip(pred_str_processed[:200], label_str[:200]))
 
         get_wer = WER(predictions=pred_str_processed, references=label_str)
         # get_wer = WER(predictions=pred_str, references=label_str)
